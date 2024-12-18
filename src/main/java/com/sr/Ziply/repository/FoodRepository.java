@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface FoodRepository extends JpaRepository<Food,Long> {
     List<Food> findByRestaurantId(Long restaurantId);
@@ -19,4 +20,5 @@ public interface FoodRepository extends JpaRepository<Food,Long> {
     List<Food> searchFood(@Param("search") String search);
 
 
+    Optional<Food> findByNameAndRestaurantId(String name, Long id);
 }

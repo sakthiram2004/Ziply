@@ -3,6 +3,7 @@ package com.sr.Ziply.service;
 
 import com.sr.Ziply.dto.UserDto;
 import com.sr.Ziply.enums.UserRole;
+import com.sr.Ziply.exception.SourceNotFoundException;
 import com.sr.Ziply.model.Address;
 import com.sr.Ziply.model.Cart;
 import com.sr.Ziply.model.User;
@@ -62,11 +63,15 @@ public class UserService {
         return userDto;
     }
 
-    public User findUserByJwt(String jwt){
-        String name = jwtUtils.extractUsername(jwt);
-        return userRepository.findByEmail(name);
+    public User findUserByJwt(String jwt)throws SourceNotFoundException{
+        try {
+            String name = jwtUtils.extractUsername(jwt);
+            return userRepository.findByEmail(name);
+        } catch (Exception e) {
+            throw new SourceNotFoundException("User Not Found");
+        }
     }
-//    @PostConstruct
+//   @PostConstruct
 
     private void createAdmin(){
         User user = new User();

@@ -22,15 +22,23 @@ public class OrderController {
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse> createOrder(@RequestBody OrderRequest request,@RequestHeader("Authorization") String jwt)throws Exception{
-        User user = userService.findUserByJwt(jwt.substring(7));
-        Order order = orderService.createOrder(request,user);
-        return ResponseEntity.ok().body( new ApiResponse(" Successfully", order.getOrderItemsList()));
+        try {
+            User user = userService.findUserByJwt(jwt.substring(7));
+            Order order = orderService.createOrder(request,user);
+            return ResponseEntity.ok().body( new ApiResponse(" Successfully", order.getOrderItemsList()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
     }
 
     @GetMapping("/user")
     public ResponseEntity<ApiResponse> getOrderHistory(@RequestHeader("Authorization") String jwt)throws Exception{
-        User user = userService.findUserByJwt(jwt.substring(7));
-        List<Order> order = orderService.getUserOrder(user.getId());
-        return ResponseEntity.ok().body( new ApiResponse(" Successfully", order));
+        try {
+            User user = userService.findUserByJwt(jwt.substring(7));
+            List<Order> order = orderService.getUserOrder(user.getId());
+            return ResponseEntity.ok().body( new ApiResponse(" Successfully", order));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
     }
 }

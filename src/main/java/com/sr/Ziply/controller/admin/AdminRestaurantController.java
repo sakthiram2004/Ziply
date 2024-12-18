@@ -6,6 +6,7 @@ import com.sr.Ziply.model.Restaurant;
 import com.sr.Ziply.model.User;
 import com.sr.Ziply.request.CreateRestaurantRequest;
 import com.sr.Ziply.response.ApiResponse;
+import com.sr.Ziply.response.RestaurentResponse;
 import com.sr.Ziply.service.UserService;
 import com.sr.Ziply.service.restaurant.RestaurantService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,28 +24,29 @@ public class AdminRestaurantController {
 
    @PostMapping("/create")
    public ResponseEntity<ApiResponse> createRestaurent(@RequestBody CreateRestaurantRequest req, @RequestHeader("Authorization") String jwt){
-//       System.out.println(jwt);
-//       jwt = jwt.substring(7);
-//       System.out.println(jwt);
-       User user = userService.findUserByJwt(jwt.substring(7));
+
+
 
        try {
+           User user = userService.findUserByJwt(jwt.substring(7));
            Restaurant   restaurant = restaurantService.createRestaurant(req,user);
+           RestaurentResponse restaurentResponse = restaurantService.convertRestaurantResponse(restaurant);
 
-       return  ResponseEntity.ok().body(new ApiResponse("Created Successfully",restaurant));
-       } catch (SourceAlreadyExist e) {
+       return  ResponseEntity.ok().body(new ApiResponse("Created Successfully",restaurentResponse));
+       } catch (Exception e) {
            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
        }
    }
     @PutMapping("/update/{id}")
     public ResponseEntity<ApiResponse> updateRestaurent(@RequestBody CreateRestaurantRequest req, @RequestHeader("Authorization") String jwt,@PathVariable Long id){
-        User user = userService.findUserByJwt(jwt.substring(7));
+
 
         try {
+            User user = userService.findUserByJwt(jwt.substring(7));
             Restaurant restaurant = restaurantService.updateRestaurant(id,req);
-
-        return  ResponseEntity.ok().body(new ApiResponse("Update Successfully",restaurant));
-        } catch (SourceNotFoundException e) {
+            RestaurentResponse restaurentResponse = restaurantService.convertRestaurantResponse(restaurant);
+        return  ResponseEntity.ok().body(new ApiResponse("Update Successfully",restaurentResponse));
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
         }
     }
@@ -61,13 +63,14 @@ public class AdminRestaurantController {
     }
     @PutMapping("/update/status/{id}")
     public ResponseEntity<ApiResponse> updateRestaurentStatus( @RequestHeader("Authorization") String jwt,@PathVariable Long id){
-        User user = userService.findUserByJwt(jwt.substring(7));
+
 
         try {
+            User user = userService.findUserByJwt(jwt.substring(7));
             Restaurant restaurant = restaurantService.updateRestaurantStatus(id);
 
         return  ResponseEntity.ok().body(new ApiResponse("Update Restaurant Status Successfully",restaurantService.convertRestaurantDto(restaurant)));
-        } catch (SourceNotFoundException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
         }
     }
@@ -75,9 +78,13 @@ public class AdminRestaurantController {
     @GetMapping("/user")
 
     public ResponseEntity<ApiResponse> findUserById( @RequestHeader("Authorization") String jwt){
-        User user = userService.findUserByJwt(jwt.substring(7));
-        Restaurant restaurant = restaurantService.getRestaurantByUserId(user.getId());
-        return  ResponseEntity.ok().body(new ApiResponse("Restaurant find  Successfully",userService.convertUserDto(restaurant.getOwner())));
+        try {
+            User user = userService.findUserByJwt(jwt.substring(7));
+            Restaurant restaurant = restaurantService.getRestaurantByUserId(user.getId());
+            return  ResponseEntity.ok().body(new ApiResponse("Restaurant find  Successfully",userService.convertUserDto(restaurant.getOwner())));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse("Restaurent Not found", null));
+        }
     }
 
 

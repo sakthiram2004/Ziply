@@ -1,5 +1,6 @@
 package com.sr.Ziply.service.cart;
 
+import com.sr.Ziply.exception.SourceNotFoundException;
 import com.sr.Ziply.model.Cart;
 import com.sr.Ziply.model.CartItems;
 import com.sr.Ziply.model.Food;
@@ -7,6 +8,8 @@ import com.sr.Ziply.model.User;
 import com.sr.Ziply.repository.CartItemsRepository;
 import com.sr.Ziply.repository.CartRepository;
 import com.sr.Ziply.request.AddCartItemRequest;
+import com.sr.Ziply.response.AddCartResponse;
+import com.sr.Ziply.response.CartResponse;
 import com.sr.Ziply.service.UserService;
 import com.sr.Ziply.service.food.FoodService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,17 +103,21 @@ public class CartServiceImpl implements CartService{
 
     @Override
     public CartItems updateCartItemQuantity(Long cartItemId, int quantity) throws Exception {
-        Optional<CartItems> cartItemsOptional=cartItemsRepository.findById(cartItemId);
-        CartItems items = cartItemsOptional.get();
-        items.setQuantity(quantity);
-        items.setTotalPrice(items.getFood().getPrice()*quantity);
-        Cart cart = items.getCart();
+        try {
+            Optional<CartItems> cartItemsOptional=cartItemsRepository.findById(cartItemId);
+            CartItems items = cartItemsOptional.get();
+            items.setQuantity(quantity);
+            items.setTotalPrice(items.getFood().getPrice()*quantity);
+            Cart cart = items.getCart();
 
 
-        cart.setTotal(calculateCartTotal(cart));
-        cartRepository.save(cart);
+            cart.setTotal(calculateCartTotal(cart));
+            cartRepository.save(cart);
 
-return        cartItemsRepository.save(items);
+            return        cartItemsRepository.save(items);
+        } catch (Exception e) {
+            throw new SourceNotFoundException("CartItemId Not Found");
+        }
 
     }
 
@@ -143,8 +150,12 @@ return        cartItemsRepository.save(items);
 
     @Override
     public Cart findCartById(Long id) throws Exception {
-        Optional<Cart> cart = cartRepository.findById(id);
-        return cart.get();
+        try {
+            Optional<Cart> cart = cartRepository.findById(id);
+            return cart.get();
+        } catch (Exception e) {
+            throw new SourceNotFoundException("Cart id Not Found");
+        }
     }
 
     @Override
@@ -156,7 +167,11 @@ return        cartItemsRepository.save(items);
 
     @Override
     public Cart findCartByUserId(Long id) throws Exception {
-        return cartRepository.findByCustomerId(id);
+        try {
+            return cartRepository.findByCustomerId(id);
+        } catch (Exception e) {
+            throw new SourceNotFoundException("User Not Found");
+        }
     }
 
     @Override
@@ -167,5 +182,27 @@ return        cartItemsRepository.save(items);
         cart.getCartItems().clear();
         cart.setTotal(0L);
         return cartRepository.save(cart);
+    }
+
+    public CartResponse convertCartResponse(Cart cart){
+        CartResponse cartResponse = new CartResponse();
+        cartResponse.setCartId(cart.getId());
+        cartResponse.setCartTotal(cart.getTotal());
+        cartResponse.setCustomerName(cart.getCustomer().getName());
+        cartResponse.setCartItems(cart.getCartItems());
+        return cartResponse;
+    }
+@Override
+    public AddCartResponse addCartResponse(CartItems cartItems){
+        AddCartResponse addCartResponse = new AddCartResponse();
+        addCartResponse.setCartItenId(cartItems.getId());
+        addCartResponse.setImages(cartItems.getFood().getImages());
+        addCartResponse.setQuantity(cartItems.getQuantity());
+        addCartResponse.setTotalPrice(cartItems.getTotalPrice());
+        addCartResponse.setFoodName(cartItems.getFood().getName());
+        addCartResponse.setCategoryName(cartItems.getFood().getCategory().getName());
+        addCartResponse.setFoodPrice(cartItems.getFood().getPrice());
+        addCartResponse.setRestaurentName(cartItems.getFood().getRestaurant().getName());
+        return addCartResponse;
     }
 }

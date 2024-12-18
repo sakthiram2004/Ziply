@@ -24,18 +24,25 @@ public class RestaurantController {
     @GetMapping("/search")
     public ResponseEntity<ApiResponse> searchRestaurent(@RequestHeader("Authorization") String jwt,
                                                         @RequestParam String search) {
-        User user = userService.findUserByJwt(jwt.substring(7));
-        List<Restaurant> restaurant = restaurantService.searchRestaurant(search);
-        return ResponseEntity.ok().body(new ApiResponse("Found Successfully", restaurant));
+        try {
+            User user = userService.findUserByJwt(jwt.substring(7));
+            List<Restaurant> restaurant = restaurantService.searchRestaurant(search);
+            return ResponseEntity.ok().body(new ApiResponse("Found Successfully", restaurant));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
     }
 
     @GetMapping("/getAllRestaurants")
     public ResponseEntity<ApiResponse> getAllRestaurant(@RequestHeader("Authorization") String jwt) {
 
 //            User user = userService.findUserByJwt(jwt);
+        try {
             List<Restaurant> restaurant = restaurantService.getAllRestaurant();
             return ResponseEntity.ok().body(new ApiResponse(" Successfully", restaurant));
-
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
 
 
     }
@@ -53,9 +60,10 @@ public class RestaurantController {
 
     @PutMapping("/{id}/add-favorite")
     public ResponseEntity<ApiResponse> addFavorite(@RequestHeader("Authorization") String jwt, @PathVariable Long id){
-    User user = userService.findUserByJwt(jwt.substring(7));
+
 
         try {
+            User user = userService.findUserByJwt(jwt.substring(7));
             RestaurantDto   restaurantDto = restaurantService.addFavorites(id,user);
 
         return  ResponseEntity.ok().body(new ApiResponse("Found Successfully",restaurantDto));

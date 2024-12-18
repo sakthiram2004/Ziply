@@ -1,5 +1,6 @@
 package com.sr.Ziply.controller.owner;
 
+import com.sr.Ziply.exception.SourceNotFoundException;
 import com.sr.Ziply.model.Food;
 import com.sr.Ziply.model.Restaurant;
 import com.sr.Ziply.model.User;
@@ -24,27 +25,39 @@ public class OwnerFoodController {
     @PostMapping("/create")
     public ResponseEntity<ApiResponse> createFood(@RequestBody CreateFoodRequest req,
                                                   @RequestHeader("Authorization") String jwt) throws Exception {
-        User user = userService.findUserByJwt(jwt.substring(7));
-        Restaurant restaurant = restaurantService.findRestaurantById(req.getRestaurantId());
-        Food food = foodService.createFood(req,restaurant);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("created",food));
+        try {
+            User user = userService.findUserByJwt(jwt.substring(7));
+            Restaurant restaurant = restaurantService.findRestaurantById(req.getRestaurantId());
+            Food food = foodService.createFood(req,restaurant);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("created",foodService.convertFoodRes(food)));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
     }
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse> createFood(@PathVariable Long id,
+    public ResponseEntity<ApiResponse> deleteFood(@PathVariable Long id,
                                                   @RequestHeader("Authorization") String jwt) throws Exception {
-        User user = userService.findUserByJwt(jwt.substring(7));
-        Restaurant restaurant= restaurantService.getRestaurantByUserId(user.getId());
-        foodService.deleteFood(id,restaurant);
+        try {
+            User user = userService.findUserByJwt(jwt.substring(7));
+            Restaurant restaurant= restaurantService.getRestaurantByUserId(user.getId());
+            foodService.deleteFood(id,restaurant);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("DELETED SUCCESSFULLY",null));
+            return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("DELETED SUCCESSFULLY",null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
     }
 
     @GetMapping("/Foodavailablitystatus")
     public ResponseEntity<ApiResponse> updateFoodAvailablityStatus(@PathVariable Long id,
                                                                    @RequestHeader("Authorization") String jwt) throws Exception {
-        User user = userService.findUserByJwt(jwt.substring(7));
-        foodService.updateAvailablityStatus(id);
+        try {
+            User user = userService.findUserByJwt(jwt.substring(7));
+            Food food=foodService.updateAvailablityStatus(id);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("success",null));
+            return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("success",foodService.convertFoodRes(food)));
+        } catch (SourceNotFoundException e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
     }
 }

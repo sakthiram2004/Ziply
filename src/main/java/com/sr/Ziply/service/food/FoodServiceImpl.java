@@ -1,5 +1,6 @@
 package com.sr.Ziply.service.food;
 
+import com.sr.Ziply.exception.SourceAlreadyExist;
 import com.sr.Ziply.exception.SourceNotFoundException;
 import com.sr.Ziply.model.Category;
 import com.sr.Ziply.model.Food;
@@ -8,11 +9,13 @@ import com.sr.Ziply.repository.CategoryRepository;
 import com.sr.Ziply.repository.FoodRepository;
 import com.sr.Ziply.repository.RestaurantRepository;
 import com.sr.Ziply.request.CreateFoodRequest;
+import com.sr.Ziply.response.FoodResponse;
 import com.sr.Ziply.service.category.CategoryService;
 import com.sr.Ziply.service.restaurant.RestaurantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,33 +33,49 @@ private CategoryRepository categoryRepository;
 @Autowired
 private RestaurantService restaurantService;
    @Override
-    public Food createFood(CreateFoodRequest createFoodRequest, Restaurant restaurant) {
-        Food food = new Food();
-        Category category = createCategory(createFoodRequest.getCategory().getName(),restaurant.getId());
-        food.setCategory(category);
-        food.setRestaurant(restaurant);
-        food.setDescription(createFoodRequest.getDescription());
-        food.setImages(createFoodRequest.getImages());
-        food.setName(createFoodRequest.getName());
-        food.setPrice(createFoodRequest.getPrice());
-        //food.setIngredientsItems(createFoodRequest.getIngredients());
-        food.setSeasonal(createFoodRequest.isSeasional());
-        food.setVegetarion(createFoodRequest.isIsvegetarin());
+    public Food createFood(CreateFoodRequest createFoodRequest, Restaurant restaurant)throws Exception {
+       Optional<Food> existingFood = foodRepository.findByNameAndRestaurantId(
+               createFoodRequest.getName(), restaurant.getId());
 
-        Food saveFood = foodRepository.save(food);
-        restaurant.getFoods().add(saveFood);
+       if (existingFood.isPresent()) {
+           throw new SourceAlreadyExist("Food with the same name already exists in the restaurant.");
+       }
 
-        return saveFood;
+
+       Category category = createCategory(createFoodRequest.getCategory().getName(), restaurant.getId());
+
+       Food food = new Food();
+       food.setCategory(category);
+       food.setRestaurant(restaurant);
+       food.setDescription(createFoodRequest.getDescription());
+       food.setImages(createFoodRequest.getImages());
+       food.setName(createFoodRequest.getName());
+       food.setPrice(createFoodRequest.getPrice());
+       // food.setIngredientsItems(createFoodRequest.getIngredients());
+       food.setSeasonal(createFoodRequest.isSeasional());
+       food.setVegetarion(createFoodRequest.isIsvegetarin());
+
+       // Save the new Food item
+       Food savedFood = foodRepository.save(food);
+
+       // Add the saved food item to the restaurant
+       restaurant.getFoods().add(savedFood);
+
+       return savedFood;
     }
 
     @Override
     public void deleteFood(Long foodId,Restaurant restaurant) throws SourceNotFoundException {
-       List<Food> foods = restaurant.getFoods();
-        if(foods.contains(foodRepository.findById(foodId))){
-            foods.remove(foodRepository.findById(foodId));
-            foodRepository.deleteById(foodRepository.findById(foodId).get().getId());
+        try {
+            List<Food> foods = restaurant.getFoods();
+            if(foods.contains(foodRepository.findById(foodId))){
+                foods.remove(foodRepository.findById(foodId));
+                foodRepository.deleteById(foodRepository.findById(foodId).get().getId());
+            }
+            restaurantRepository.save(restaurant);
+        } catch (Exception e) {
+            throw new SourceNotFoundException("Source Not Found");
         }
-        restaurantRepository.save(restaurant);
 
     }
 
@@ -126,28 +145,48 @@ private RestaurantService restaurantService;
     }
 
     public Category createCategory(String name, Long restaurantId) {
-        Restaurant restaurant = restaurantService.getRestaurantByUserId(restaurantId);
+        try {
+            Restaurant restaurant = restaurantService.getRestaurantByUserId(restaurantId);
 
-        // Check if the category already exists for this restaurant
-        Category existingCategory = categoryRepository.findByNameAndRestaurant(name, restaurant);
+            // Check if the category already exists for this restaurant
+            Category existingCategory = categoryRepository.findByNameAndRestaurant(name, restaurant);
 
-        // If the category exists, return the existing one
-        if (existingCategory != null) {
-            return existingCategory;
+            // If the category exists, return the existing one
+            if (existingCategory != null) {
+                return existingCategory;
+            }
+
+            // If not, create a new category
+            Category category = new Category();
+            category.setName(name);
+            category.setRestaurant(restaurant);
+
+            // Save and return the new category
+            return categoryRepository.save(category);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-
-        // If not, create a new category
-        Category category = new Category();
-        category.setName(name);
-        category.setRestaurant(restaurant);
-
-        // Save and return the new category
-        return categoryRepository.save(category);
     }
     public boolean existsByNameAndRestaurant(String name, Restaurant restaurant) {
         return categoryRepository.existsByNameAndRestaurant(name, restaurant);
     }
 
+    @Override
+    public FoodResponse convertFoodRes(Food food){
+       FoodResponse foodResponse = new FoodResponse();
+       foodResponse.setId(food.getId());
+       foodResponse.setName(food.getName());
+       foodResponse.setAvailable(food.isAvailable());
+       foodResponse.setDescription(food.getDescription());
+       foodResponse.setCategory(food.getCategory().getName());
+       foodResponse.setImages(food.getImages());
+       foodResponse.setPrice(food.getPrice());
+       foodResponse.setRestaurant(food.getRestaurant().getName());
+       foodResponse.setSeasonal(food.isSeasonal());
+       foodResponse.setVegetarion(food.isVegetarion());
+       foodResponse.setCreationDate(new Date());
+       return foodResponse;
+    }
 
 
 }

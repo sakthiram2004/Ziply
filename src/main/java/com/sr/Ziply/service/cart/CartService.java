@@ -3,6 +3,7 @@ package com.sr.Ziply.service.cart;
 import com.sr.Ziply.model.Cart;
 import com.sr.Ziply.model.CartItems;
 import com.sr.Ziply.request.AddCartItemRequest;
+import com.sr.Ziply.response.AddCartResponse;
 
 public interface CartService {
 
@@ -19,4 +20,6 @@ public interface CartService {
     Cart findCartByUserId(Long id) throws Exception;
 
     Cart clearCart(String jwt) throws Exception;
+
+    AddCartResponse addCartResponse(CartItems cartItems);
 }

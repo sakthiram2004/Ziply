@@ -10,7 +10,7 @@ import java.util.List;
 public class RestaurantDto {
 
     private Long id;
-
+    private String name;
     private String title;
     private String description;
     @Column(length = 1000)

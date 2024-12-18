@@ -28,21 +28,22 @@ public class OwnerRestaurantController {
     @PostMapping("/create")
     public ResponseEntity<ApiResponse> createRestaurent(@RequestBody CreateRestaurantRequest req, @RequestHeader("Authorization") String jwt){
 
-        User user = userService.findUserByJwt(jwt.substring(7));
+
 
         try {
+            User user = userService.findUserByJwt(jwt.substring(7));
             Restaurant restaurant = restaurantService.createRestaurant(req,user);
 
             return  ResponseEntity.ok().body(new ApiResponse("Created Successfully",restaurant));
-        } catch (SourceAlreadyExist e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
         }
     }
     @PutMapping("/update/{id}")
     public ResponseEntity<ApiResponse> updateRestaurent(@RequestBody CreateRestaurantRequest req, @RequestHeader("Authorization") String jwt,@PathVariable Long id){
-        User user = userService.findUserByJwt(jwt.substring(7));
 
-        try {
+
+        try { User user = userService.findUserByJwt(jwt.substring(7));
             Restaurant restaurant = restaurantService.updateRestaurant(id,req);
 
             return  ResponseEntity.ok().body(new ApiResponse("Update Successfully",restaurant));
@@ -63,9 +64,9 @@ public class OwnerRestaurantController {
     }
     @PutMapping("/update/status/{id}")
     public ResponseEntity<ApiResponse> updateRestaurentStatus( @RequestHeader("Authorization") String jwt,@PathVariable Long id){
-        User user = userService.findUserByJwt(jwt.substring(7));
 
-        try {
+
+        try {User user = userService.findUserByJwt(jwt.substring(7));
             Restaurant restaurant = restaurantService.updateRestaurantStatus(id);
 
             return  ResponseEntity.ok().body(new ApiResponse("Update Restaurant Status Successfully",restaurant));
@@ -77,9 +78,13 @@ public class OwnerRestaurantController {
     @GetMapping("/user")
 
     public ResponseEntity<ApiResponse> findUserById( @RequestHeader("Authorization") String jwt){
-        User user = userService.findUserByJwt(jwt.substring(7));
-        Restaurant restaurant = restaurantService.getRestaurantByUserId(user.getId());
-        return  ResponseEntity.ok().body(new ApiResponse("Restaurant find  Successfully",restaurant));
+        try {
+            User user = userService.findUserByJwt(jwt.substring(7));
+            Restaurant restaurant = restaurantService.getRestaurantByUserId(user.getId());
+            return  ResponseEntity.ok().body(new ApiResponse("Restaurant find  Successfully",restaurant));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
     }
     @PutMapping("/update/orderstatus/{id}")
     public ResponseEntity<ApiResponse> updateOrderStatus(@PathVariable Long id,@RequestParam String status){

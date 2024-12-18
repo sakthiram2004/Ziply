@@ -25,9 +25,13 @@ public class FoodController {
     @GetMapping("/search")
     public ResponseEntity<ApiResponse> searchFood(@RequestParam String name,
                                                  @RequestHeader("Authorization") String jwt)throws Exception{
-        User user = userService.findUserByJwt(jwt.substring(7));
-        List<Food> foods = foodService.searchFood(name);
-        return ResponseEntity.ok().body( new ApiResponse(" Successfully", foods));
+        try {
+            User user = userService.findUserByJwt(jwt.substring(7));
+            List<Food> foods = foodService.searchFood(name);
+            return ResponseEntity.ok().body( new ApiResponse(" Successfully", foods));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
     }
 
     @GetMapping("/restaurant/{restaurantId}")
@@ -41,8 +45,12 @@ public class FoodController {
                     false) String food_category,
             @PathVariable Long restaurantId,
             @RequestHeader("Authorization") String jwt) throws Exception {
-        User user =userService.findUserByJwt(jwt.substring(7));
-        List<Food> foods=foodService.getRestaurantsFood (restaurantId, vagetarian, seasonal,nonveg, food_category);
-        return ResponseEntity.ok().body( new ApiResponse(" Successfully", foods));
+        try {
+            User user =userService.findUserByJwt(jwt.substring(7));
+            List<Food> foods=foodService.getRestaurantsFood (restaurantId, vagetarian, seasonal,nonveg, food_category);
+            return ResponseEntity.ok().body( new ApiResponse(" Successfully", foods));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
     }
 }

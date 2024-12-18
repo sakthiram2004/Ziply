@@ -22,15 +22,23 @@ public class AdminCategoryController {
     @PostMapping("/create")
     public ResponseEntity<ApiResponse> createCategory(@RequestBody Category category ,
                                                       @RequestHeader("Authorization") String jwt)throws Exception{
-        User user = userService.findUserByJwt(jwt.substring(7));
-        Category createdCategory = categoryService.createCategory(category.getName(),user.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("category created ",createdCategory));
+        try {
+            User user = userService.findUserByJwt(jwt.substring(7));
+            Category createdCategory = categoryService.createCategory(category.getName(),user.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("category created ",createdCategory));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
     }
     @GetMapping("/all")
     public ResponseEntity<ApiResponse> getRestaurantCategory(
                                                       @RequestHeader("Authorization") String jwt)throws Exception{
-        User user = userService.findUserByJwt(jwt.substring(7));
-        List<Category> createdCategory = categoryService.findCategoryByRestaurantId(user.getId());
-        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("Categories",createdCategory));
+        try {
+            User user = userService.findUserByJwt(jwt.substring(7));
+            List<Category> createdCategory = categoryService.findCategoryByRestaurantId(user.getId());
+            return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("Categories",createdCategory));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new  ApiResponse(e.getMessage(), null));
+        }
     }
 }
